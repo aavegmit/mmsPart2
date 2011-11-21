@@ -33,15 +33,16 @@ public class videoSummarize {
         int percentage = Integer.parseInt(args[2]);
 
 	AudioLevels al = new AudioLevels(audioFileName) ;
-	al.writeToRawFile(31150, 1) ;
-	System.out.println("====++++++===================") ;
-	al.writeToRawFile(211500, 7) ;
-	al.writeToWavFile() ;
+//	al.writeToRawFile(31150, 1) ;
+//	System.out.println("====++++++===================") ;
+//	al.writeToRawFile(211500, 7) ;
+//	al.writeToWavFile() ;
 //	System.out.println(al.getVideoFrameNo(22050)) ;
-//	shotInfo si = new shotInfo() ;
-//	si.numFrames = 24*500;
-//	videoToShots.shotHashMap.put(0, si) ;
-//	al.shorten() ;
+	shotInfo si = new shotInfo() ;
+	si.numFrames = 24*500;
+	videoToShots.shotHashMap.put(0, si) ;
+	al.shorten() ;
+	al.summarize(percentage) ;
 
         
         //Thread soundShotThread = new Thread(new PlaySound(audioFileName));

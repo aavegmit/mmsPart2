@@ -34,6 +34,7 @@ public class AudioLevels {
     private SourceDataLine dataLine ;
     private int rawBytesCount ;
     private float keyFrameThreshold;
+    private int minFramesPerKeyFrame;
 
     enum Position {
 
@@ -48,6 +49,7 @@ public class AudioLevels {
 	this.audioFile = new File(audioFileName);
 	this.rawBytesCount = 0 ;
 	this.keyFrameThreshold = (float)0.8 ;
+	this.minFramesPerKeyFrame = 24*5 ;  // 5 sec of video
 	curPosition = Position.NORMAL;
 
 	try {
@@ -160,16 +162,65 @@ public class AudioLevels {
 	}
     }
 
+    public void addKeyInList(LinkedHashMap<Integer, Integer> lh, int key){
+	boolean keyFound = false ;
+	for (Map.Entry<Integer, Integer> entry : lh.entrySet()) {
+	    if(entry.getKey() < key){
+		if(entry.getValue() + entry.getKey() > key){
+		    keyFound = true ;
+		    if(key + this.minFramesPerKeyFrame < entry.getKey() + entry.getValue()){
+			lh.put(entry.getKey(), this.minFramesPerKeyFrame - (entry.getKey()  - key) ) ;
+		    }
+		    break ;
+		} 
+	    }
+	}
+	if(!keyFound){
+	    lh.put(key, this.minFramesPerKeyFrame) ;
+	}
+    }
+
     public void summarize(int percentage){
 	// Find the frames(based on percentage) needed in the summary
 	long totalFrames = videoToShots.numFrames * percentage / 100 ;
 	// Sort the shots based on weight
-	
-	// Loop over these shots
+	shotInfo.computeShotWeight() ;
+	shotInfo.sortShotHashMapOnWeight() ;
 	// Sort the key frames based on its weight
-	// Loop over the key frames
-	// Before adding a frame, check for overlapping
-	// If overlapping present, update this list with overlapping
+	shotInfo.sortKeyFramesHashMapOnKey() ;
+	LinkedHashMap<Integer, Integer> finalKeyFrames = new LinkedHashMap<Integer, Integer>();
+	System.out.println("total Frames " + totalFrames) ;
+	
+	for (Map.Entry<Integer, shotInfo> entry : videoToShots.shotHashMap.entrySet()) {
+	    LinkedHashMap<Integer, Integer> localKeyFrames = new LinkedHashMap<Integer, Integer>();
+	    if(totalFrames > 0){
+		localKeyFrames.put(entry.getKey(), this.minFramesPerKeyFrame) ;
+		--totalFrames ;
+	    }
+	    for (Map.Entry<Integer, Integer> keyEntry : entry.getValue().keyFrames.entrySet()) {
+		if(entry.getKey() != keyEntry.getKey() ){
+		    if(totalFrames > 0){
+			addKeyInList(localKeyFrames, keyEntry.getKey()) ;
+			--totalFrames ;
+		    }
+		    else
+			break ;
+		}
+	    } // end of keys for loop
+	    for (Map.Entry<Integer, Integer> entry1 : localKeyFrames.entrySet()) {
+		finalKeyFrames.put(entry1.getKey(), entry1.getValue()) ;
+	    }
+	    if (totalFrames == 0)
+		break ;
+	} // end of shots for loop
+
+	// Sort the final list on key indexes
+	for (Map.Entry<Integer, Integer> entry2 : finalKeyFrames.entrySet()) {
+	    System.out.println("Writing " + entry2.getKey() + " ,len " + entry2.getValue()) ;
+	    writeToRawFile(getAudioFrameNo(entry2.getKey()), entry2.getValue()/24 ) ;
+	    shotInfo.writeShotHashMapToFile(entry2.getKey(), entry2.getValue() ) ;
+	}
+	writeToWavFile() ;
     }
 
 
@@ -217,7 +268,7 @@ public class AudioLevels {
 			float audioVal = (float)( ( ( audioBuffer[cn+1] << 8 ) | ( audioBuffer[cn] & 0xff ) ) / 32768.0 ); 
 			    if( Math.abs(audioVal) > this.keyFrameThreshold){
 				// Add tempFrameNo as key
-				System.out.println("New key frame " + tempFrameNo ) ;
+				videoToShots.shotHashMap.get(videoFN).addKeyToKeyFramesHashMap(getVideoFrameNo(tempFrameNo) ) ;
 			    }
 			++tempFrameNo;
 		    }

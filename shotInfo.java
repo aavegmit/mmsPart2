@@ -100,7 +100,7 @@ class shotInfo {
     }
 
     //Writing the shot to file and input is shot starting frame and numFrames in it
-    public static void writeShotHashMapToFile(int start, int len) throws IOException {
+    public static void writeShotHashMapToFile(int start, int len) {
         try {
             FileOutputStream fos = null;
             FileInputStream fis = new FileInputStream(videoToShots.file);
@@ -120,6 +120,7 @@ class shotInfo {
             fis.close();
         } catch (FileNotFoundException ex) {
             Logger.getLogger(videoToShots.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        } catch (IOException e){
+	}
     }
 }
