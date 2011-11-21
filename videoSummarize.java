@@ -38,36 +38,40 @@ public class videoSummarize {
         String audioFileName = args[1];
         int percentage = Integer.parseInt(args[2]);
 
+        fos = new RandomAccessFile("/media/New Volume/576_sample/videoOutput.rgb", "rw");
+        
+        Thread videoShotThread = new Thread(new videoToShots(videoFileName));
+
 	AudioLevels al = new AudioLevels(audioFileName) ;
 //	al.writeToRawFile(31150, 1) ;
 //	System.out.println("====++++++===================") ;
 //	al.writeToRawFile(211500, 7) ;
 //	al.writeToWavFile() ;
 //	System.out.println(al.getVideoFrameNo(22050)) ;
-	shotInfo si = new shotInfo() ;
-	si.numFrames = 24*500;
-	videoToShots.shotHashMap.put(0, si) ;
-	al.shorten() ;
-	al.summarize(percentage) ;
+//	shotInfo si = new shotInfo() ;
+//	si.numFrames = 24*500;
+//	videoToShots.shotHashMap.put(0, si) ;
         
-        fos = new RandomAccessFile("videoOutput.rgb", "rw");
-        
-        //Thread soundShotThread = new Thread(new PlaySound(audioFileName));
-//        Thread videoShotThread = new Thread(new videoToShots(videoFileName));
 //        
 //        //soundShotThread.start();
-//        videoShotThread.start();
-//
-//        try {
-//            //delay for one second
-//            //Thread.sleep(500000);
-//            //soundShotThread.join();
-//            videoShotThread.join();
-//            fos.close();
-//            System.out.println("Main exiting..");
-//        } catch (IOException ex) {
-//            Logger.getLogger(videoSummarize.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (InterruptedException e) {
-//        }
+        videoShotThread.start();
+
+
+        try {
+            //delay for one second
+            //Thread.sleep(500000);
+            //soundShotThread.join();
+            videoShotThread.join();
+            System.out.println("Main exiting..");
+        } catch (InterruptedException e) {
+        }
+
+//	al.shorten() ;
+	al.summarize(percentage) ;
+	try {
+	    fos.close();
+	} catch (Exception ex) {
+	} 
+
     }
 }
