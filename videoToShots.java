@@ -114,6 +114,8 @@ public class videoToShots implements Runnable {
             }
             fis.close();
             printShotHashMap();
+            shotInfo.writeShotHashMapToFile(0, 120);
+            shotInfo.writeShotHashMapToFile(720, 240);
         } catch (IOException ex) {
             Logger.getLogger(videoToShots.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -259,7 +261,14 @@ public class videoToShots implements Runnable {
                 obj.numFrames = (int) this.numFrames - key;
             }
             if (keyFrameNum != -1) {
-                obj.keyFrames.put(keyFrameNum, 1);
+                int temp = 0;
+                if(obj.keyFrames.containsKey(keyFrameNum)){
+                    temp = obj.keyFrames.get(keyFrameNum);
+                    obj.keyFrames.put(keyFrameNum, temp+1);
+                }
+                else {
+                    obj.keyFrames.put(keyFrameNum, 1);
+                }
             }
             shotHashMap.put(key, obj);
         }
@@ -277,21 +286,16 @@ public class videoToShots implements Runnable {
         }
         shotInfo.sortKeyFramesHashMapOnKey();
         insertIntoShotHashMap(-1, 0, 0);
+        shotInfo.computeShotWeight();
         shotInfo.sortShotHashMapOnWeight();
 
         for (Map.Entry<Integer, shotInfo> entry : shotHashMap.entrySet()) {
-            System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue().numFrames);
+            System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue().numFrames + " Weight: "+entry.getValue().weight);
             System.out.print("Key Frames are: ");
             for (Map.Entry<Integer, Integer> sub_entry : entry.getValue().keyFrames.entrySet()) {
                 System.out.print(sub_entry.getKey() + " ");
             }
             System.out.println();
         }
-
-        //  count++;
-        //if(count == 3)
-        //if(entry.getKey() == 12485)
-        //  writeToFile(entry.getKey(), entry.getValue().numFrames);
-        //break;
     }
 }

@@ -3,6 +3,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -59,22 +60,18 @@ class shotInfo {
 
     //sorts the shots based on the computed weights
     public static void sortShotHashMapOnWeight() {
-        //for (Map.Entry<Integer, shotInfo> entry : videoToShots.shotHashMap.entrySet()) {
-        //for (Map.Entry<Integer, shotInfo> entry : videoToShots.shotHashMap.entrySet()) {
-        //System.out.println("Working on: "+ entry.getKey());
-        /*List list = new LinkedList(videoToShots.shotHashMap.entrySet());
+        List list = new LinkedList(videoToShots.shotHashMap.entrySet());
         Collections.sort(list, new Comparator() {
-        //@Override
-        public int compare(Object o1, Object o2) {
-        return ((Comparable) ((Map.Entry) (o1)).getValue()).compareTo(((Map.Entry) (o2)).getKey());
-        }
+            //@Override
+            public int compare(Object o1, Object o2) {
+                return ((Comparable) ((Map.Entry<Integer, shotInfo>) (o2)).getValue().weight).compareTo(((Map.Entry<Integer, shotInfo>) (o1)).getValue().weight);
+            }
         });
-        entry.getValue().keyFrames.clear();
-        //Map result = new LinkedHashMap();
+        videoToShots.shotHashMap.clear();
         for (Iterator it = list.iterator(); it.hasNext();) {
-        Map.Entry res = (Map.Entry) it.next();
-        entry.getValue().keyFrames.put((Integer)res.getKey(), (Integer)res.getValue());
-        }*/
+            Map.Entry res = (Map.Entry) it.next();
+            videoToShots.shotHashMap.put((Integer) res.getKey(), (shotInfo) res.getValue());
+        }
     }
 
     // adding key to keyFrames hash map and incrementing weight if exists
@@ -102,21 +99,23 @@ class shotInfo {
     //Writing the shot to file and input is shot starting frame and numFrames in it
     public static void writeShotHashMapToFile(int start, int len) throws IOException {
         try {
-            FileOutputStream fos = null;
-            FileInputStream fis = new FileInputStream(videoToShots.file);
-            fos = new FileOutputStream("videoOutput.rgb");
+            //FileOutputStream fos = null;
+            //FileInputStream fis = new FileInputStream(videoToShots.file);
+            RandomAccessFile fis = new RandomAccessFile(videoToShots.file, "r");
+            //fos = new FileOutputStream("videoOutput.rgb");
             byte temp[] = new byte[videoToShots.Height * videoToShots.Width * 3];
-            while (start != 0) {
+            /*while (start != 0) {
                 fis.read(temp);
                 start--;
-            }
+            }*/
+            fis.seek(start*videoToShots.Height*videoToShots.Width*3);
+            videoSummarize.fos.seek(videoSummarize.fos.length());
             System.out.println("Now writing...");
             while (len != 0) {
                 fis.read(temp);
-                fos.write(temp);
+                videoSummarize.fos.write(temp);
                 len--;
             }
-            fos.close();
             fis.close();
         } catch (FileNotFoundException ex) {
             Logger.getLogger(videoToShots.class.getName()).log(Level.SEVERE, null, ex);
