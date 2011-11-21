@@ -1,0 +1,8 @@
+
+
+SortShotsBasedOnWeights
+
+
+getTotalFramesInVideo
+getTotalShots
+getTotalPlayableFramesInShot - This should take care of the overlapping

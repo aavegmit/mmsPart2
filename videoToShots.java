@@ -30,7 +30,7 @@ public class videoToShots implements Runnable {
     //FileOutputStream fos = new FileOutputStream("videoOutput.rgb");
     int Height = 240;
     int Width = 320;
-    long numFrames;
+    static long numFrames;
     long numShots;
     long shotLength = 20;
     int numBuckets = 10;

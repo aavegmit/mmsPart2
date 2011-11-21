@@ -4,6 +4,7 @@ import java.io.*;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.*;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -24,7 +25,7 @@ import javax.swing.text.Position;
 public class AudioLevels {
 
     private File audioFile;
-    private OutputStream rawFile ;
+    private FileOutputStream rawFile ;
     private FileInputStream rawFileInput;
     private Position curPosition;
     private final int EXTERNAL_BUFFER_SIZE =  524288 ; // 128Kb
@@ -32,6 +33,7 @@ public class AudioLevels {
     private AudioFormat audioFormat;
     private SourceDataLine dataLine ;
     private int rawBytesCount ;
+    private float keyFrameThreshold;
 
     enum Position {
 
@@ -45,6 +47,7 @@ public class AudioLevels {
     public AudioLevels(String audioFileName) {
 	this.audioFile = new File(audioFileName);
 	this.rawBytesCount = 0 ;
+	this.keyFrameThreshold = (float)0.8 ;
 	curPosition = Position.NORMAL;
 
 	try {
@@ -75,28 +78,6 @@ public class AudioLevels {
 	this.audioFormat = audioInputStream.getFormat();
 	System.out.println(audioFormat.getFrameSize() + " ,frame rate " + audioFormat.getFrameRate()) ;
 	Info info = new Info(SourceDataLine.class, audioFormat);
-
-	// opens the audio channel
-	this.dataLine = null;
-	try {
-	    dataLine = (SourceDataLine) AudioSystem.getLine(info);
-	    dataLine.open(audioFormat, this.EXTERNAL_BUFFER_SIZE);
-	} catch (LineUnavailableException e1) {
-	    try {
-		throw new PlayWaveException(e1);
-	    } catch (PlayWaveException ex) {
-		Logger.getLogger(AudioLevels.class.getName()).log(Level.SEVERE, null, ex);
-	    }
-	}
-
-	if (dataLine.isControlSupported(FloatControl.Type.PAN)) {
-	    FloatControl pan = (FloatControl) dataLine.getControl(FloatControl.Type.PAN);
-	    if (curPosition == Position.RIGHT) {
-		pan.setValue(1.0f);
-	    } else if (curPosition == Position.LEFT) {
-		pan.setValue(-1.0f);
-	    }
-	}
     }
 
     public int getVideoFrameNo(int audioFrameNo){
@@ -104,10 +85,14 @@ public class AudioLevels {
 	return (int)timeSeek*24 ;
     }
 
+    public int getAudioFrameNo(int videoFrameNo){
+	float timeSeek = (float)(videoFrameNo / 24 ) ;
+	return (int)(timeSeek*audioFormat.getFrameRate()) ;
+    }
+
     public void writeToRawFile(int audioFrameNo, float time){
 	int noOfFrame = (int)(time * audioFormat.getFrameRate()) ;
 	int initialByte = audioFrameNo*audioFormat.getFrameSize() ;
-	System.out.println(initialByte) ;
 	int finalByte = initialByte + noOfFrame*audioFormat.getFrameSize() ;
 	rawBytesCount += finalByte - initialByte ;
 	int readBytes = 0;
@@ -137,14 +122,17 @@ public class AudioLevels {
 		if (tempBytes > this.EXTERNAL_BUFFER_SIZE){
 		    readBytes = stream.read(audioBuffer, 0, audioBuffer.length);
 		    if (readBytes >= 0) {
-			rawFile.write(audioBuffer) ;
+			System.out.println(readBytes) ;
+			rawFile.write(audioBuffer, 0, this.EXTERNAL_BUFFER_SIZE) ;
 		    }
 		    tempBytes = tempBytes - this.EXTERNAL_BUFFER_SIZE ;
 		}
 		else{
 		    readBytes = stream.read(audioBuffer, 0, tempBytes);
 		    if (readBytes >= 0) {
-			rawFile.write(audioBuffer) ;
+			System.out.println(readBytes) ;
+			System.out.println(audioBuffer[100]) ;
+			rawFile.write(audioBuffer,0,tempBytes) ;
 		    }
 		    tempBytes = 0 ;
 		}
@@ -159,6 +147,12 @@ public class AudioLevels {
     }
 
     public void writeToWavFile(){
+	try{
+	    rawFile.flush() ;
+	    rawFile.close() ;
+	} catch (IOException e){
+	    System.out.println("Exception") ;
+	}
 	AudioInputStream stream = new AudioInputStream(rawFileInput, audioFormat, rawBytesCount/audioFormat.getFrameSize()) ;
 	try{
 	    AudioSystem.write(stream, AudioFileFormat.Type.WAVE, new File("out.wav"));
@@ -166,48 +160,76 @@ public class AudioLevels {
 	}
     }
 
+    public void summarize(int percentage){
+	// Find the frames(based on percentage) needed in the summary
+	long totalFrames = videoToShots.numFrames * percentage / 100 ;
+	// Sort the shots based on weight
+	
+	// Loop over these shots
+	// Sort the key frames based on its weight
+	// Loop over the key frames
+	// Before adding a frame, check for overlapping
+	// If overlapping present, update this list with overlapping
+    }
+
+
     public void shorten() {
-	// Starts the music :P
-	dataLine.start();
 	int readBytes = 0;
 	byte[] audioBuffer = new byte[this.EXTERNAL_BUFFER_SIZE];
 
-	try {
-	    while (readBytes != -1) {
-		int counter = 0 ;
-		readBytes = audioInputStream.read(audioBuffer, 0, audioBuffer.length);
-		if (readBytes >= 0) {
-//		    dataLine.write(audioBuffer, 0, readBytes);
-		    float tempLevel = (float)0.0 ;
-		    System.out.println("readbytes = " + readBytes) ;
-//		    for(int cn = 0 ; cn < readBytes - 1 ; cn+=2) {
-//			float audioVal = (float)( ( ( audioBuffer[cn+1] << 8 ) | ( audioBuffer[cn] & 0xff ) ) / 32768.0 ); 
-//			if (audioVal != tempLevel){
-//			    //			    System.out.println(audioVal + " byte = " + cn ) ;
-//			    tempLevel = audioVal ;
-//			}
-//			else{
-//			    ++counter ;
-//			}
-//		    }
-		    System.out.println("==============   " + counter) ;
-		    rawFile.write(audioBuffer) ;
-		    AudioInputStream stream = new AudioInputStream(rawFileInput, audioFormat, readBytes/audioFormat.getFrameSize()) ;
-		    AudioSystem.write(stream, AudioFileFormat.Type.WAVE, new File("out.wav"));
-		    break ;
+	for (Map.Entry<Integer, shotInfo> entry : videoToShots.shotHashMap.entrySet()) {
+	    int videoFN = entry.getKey() ;
+	    int startFrameNo = getAudioFrameNo(videoFN) ;
+	    int lastFrameNo = getAudioFrameNo(videoFN + videoToShots.shotHashMap.get(videoFN).numFrames) ;
+	    AudioInputStream stream ;
+	    stream = null ;
+	    try {
+		stream = AudioSystem.getAudioInputStream(this.audioFile);
+	    } catch (UnsupportedAudioFileException e1) {
+		try {
+		    throw new PlayWaveException(e1);
+		} catch (PlayWaveException ex) {
+		    Logger.getLogger(AudioLevels.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	    } catch (IOException e1) {
+		try {
+		    throw new PlayWaveException(e1);
+		} catch (PlayWaveException ex) {
+		    Logger.getLogger(AudioLevels.class.getName()).log(Level.SEVERE, null, ex);
 		}
 	    }
-	} catch (IOException e1) {
-	    try {
-		throw new PlayWaveException(e1);
-	    } catch (PlayWaveException ex) {
-		Logger.getLogger(AudioLevels.class.getName()).log(Level.SEVERE, null, ex);
-	    }
-	} finally {
-	    // plays what's left and and closes the audioChannel
-	    dataLine.drain();
-	    dataLine.close();
-	}
 
+	    int tempFrameNo = startFrameNo ;
+	    float tempVal = (float)0.0 ;
+	    try {
+		int tempBytes = (lastFrameNo - startFrameNo) * audioFormat.getFrameSize() ;
+		stream.skip(startFrameNo*audioFormat.getFrameSize()) ;
+		while (tempBytes > 0) {
+		    if (tempBytes > this.EXTERNAL_BUFFER_SIZE){
+			readBytes = stream.read(audioBuffer, 0, audioBuffer.length);
+			tempBytes = tempBytes - this.EXTERNAL_BUFFER_SIZE ;
+		    }
+		    else{
+			readBytes = stream.read(audioBuffer, 0, tempBytes);
+			tempBytes = 0 ;
+		    }
+		    for(int cn = 0 ; cn < readBytes - 1 ; cn+=2) {
+			float audioVal = (float)( ( ( audioBuffer[cn+1] << 8 ) | ( audioBuffer[cn] & 0xff ) ) / 32768.0 ); 
+			    if( Math.abs(audioVal) > this.keyFrameThreshold){
+				// Add tempFrameNo as key
+				System.out.println("New key frame " + tempFrameNo ) ;
+			    }
+			++tempFrameNo;
+		    }
+		}
+	    } catch (IOException e1) {
+		try {
+		    throw new PlayWaveException(e1);
+		} catch (PlayWaveException ex) {
+		    Logger.getLogger(AudioLevels.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	    } 
+	}
     }
-    }
+} 
+
