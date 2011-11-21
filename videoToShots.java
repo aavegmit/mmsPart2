@@ -1,4 +1,3 @@
-
 import java.awt.BorderLayout;
 import java.awt.RenderingHints.Key;
 import java.awt.image.BufferedImage;
@@ -16,7 +15,6 @@ import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import sun.awt.SunHints.Value;
 
 /*
  * To change this template, choose Tools | Templates
@@ -37,8 +35,8 @@ public class videoToShots implements Runnable {
     long numShots;
     long shotLength = 20;
     int numBuckets = 10;
-    int lowerThreshold = 2;
-    int upperThreshold = 7;
+    int lowerThreshold = 10;
+    int upperThreshold = 30;
     //HashMap<Integer, > keyFrameHashMap = new HashMap<Integer, >();
     static LinkedHashMap<Integer, shotInfo> shotHashMap = new LinkedHashMap<Integer, shotInfo>();
     //byte frameArray[];
@@ -113,9 +111,9 @@ public class videoToShots implements Runnable {
                 entropy_next = 0;
             }
             fis.close();
-            printShotHashMap();
-            shotInfo.writeShotHashMapToFile(0, 120);
-            shotInfo.writeShotHashMapToFile(720, 240);
+//            printShotHashMap();
+//            shotInfo.writeShotHashMapToFile(0, 120);
+//            shotInfo.writeShotHashMapToFile(720, 240);
         } catch (IOException ex) {
             Logger.getLogger(videoToShots.class.getName()).log(Level.SEVERE, null, ex);
         }
