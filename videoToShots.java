@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -27,26 +28,27 @@ import sun.awt.SunHints.Value;
  */
 public class videoToShots implements Runnable {
 
-    File file;
+    static File file;
     FileInputStream fis;
     //FileOutputStream fos = new FileOutputStream("videoOutput.rgb");
-    int Height = 240;
-    int Width = 320;
-    long numFrames;
+    static int Height = 240;
+    static int Width = 320;
+    static long numFrames;
     long numShots;
     long shotLength = 20;
     int numBuckets = 10;
-    int lowerThreshold = 4;
+    int lowerThreshold = 2;
     int upperThreshold = 7;
     //HashMap<Integer, > keyFrameHashMap = new HashMap<Integer, >();
     static LinkedHashMap<Integer, shotInfo> shotHashMap = new LinkedHashMap<Integer, shotInfo>();
     //byte frameArray[];
 
     public videoToShots(String fileName) throws FileNotFoundException {
-        this.file = new File(fileName);
-        this.fis = new FileInputStream(this.file);
-        this.numFrames = this.file.length() / (Height * Width * 3);
-        this.numShots = this.numFrames / 120;
+        file = new File(fileName);
+        this.fis = new FileInputStream(file);
+        numFrames = file.length() / (Height * Width * 3);
+        //this.numFrames = 1000;
+        this.numShots = numFrames / 120;
         //this.shotLength = 120 * (this.Height * this.Width * 3);
         //frameArray = new byte[this.Height * this.Width * 3];
     }
@@ -65,13 +67,12 @@ public class videoToShots implements Runnable {
             yuvArray_1 = convertToYUV(frameArray_1);
             entropy_prev = computeEntropy(yuvArray_1);
             //Insert the shot info into HASH MAP
-            //insertIntoShotHashMap(0, 1, 0);
-            insertIntoShotHashMap(0, 20*24, 0);
+            insertIntoShotHashMap(0, 20 * 24, 0);
             currShot = 0;
-            long shotDuration = currShot+(20*24);
-            for (int i = 1; i < 1000; i++) {
+            long shotDuration = currShot + (20 * 24);
+            for (int i = 1; i < this.numFrames; i++) {
+                //System.out.println(i);
                 //printImage(yuvArray_1);
-                
                 fis.read(frameArray_2, 0, Height * Width * 3);
                 //first get YUV for RGB
                 yuvArray_2 = convertToYUV(frameArray_2);
@@ -80,30 +81,30 @@ public class videoToShots implements Runnable {
                 //compute diff of entropy with prev so as to determine new shot, key frame or continuos frame
                 entropyDiff = computeDifferenceInEntropy(entropy_prev, entropy_next);
                 //System.out.println("prev: "+ entropy_prev +" next: "+ entropy_next+" Diff in Entropy: "+entropyDiff);
-                if ((int)entropyDiff > upperThreshold) {
-                    System.out.println("Value above upperThreshold..."+ i);
+                if ((int) entropyDiff > upperThreshold) {
+                    //    System.out.println("Value above upperThreshold..." + i);
                     //create a new shot and put this frame as key frame
-                    if(i>shotDuration){
-                        insertIntoShotHashMap(i, 20*24, i);
+                    if (i > shotDuration) {
+                        insertIntoShotHashMap(i, 20 * 24, i);
                         currShot = i;
+                        shotDuration = i + (20 * 24);
+                    } else {
+                        insertIntoShotHashMap(currShot, (int) ((i + (20 * 24) - shotDuration)), i);
+                        shotDuration = i + (20 * 24);
                     }
-                    else{
-                        insertIntoShotHashMap(currShot, (int)((20*24)-(shotDuration-i)), i);
-                    }
-                    
-                } else if ((int)entropyDiff >= lowerThreshold && (int)entropyDiff <= upperThreshold) {
+                } else if ((int) entropyDiff >= lowerThreshold && (int) entropyDiff <= upperThreshold) {
                     //create a new key frame but same shot
-                    System.out.println("Value between Thresholds..."+ i);
-                    if(i>shotDuration){
+                    //     System.out.println("Value between Thresholds..." + i);
+                    if (i > shotDuration) {
                         insertIntoShotHashMap(currShot, 1, i);
                         shotDuration++;
-                    }
-                    else
+                    } else {
                         insertIntoShotHashMap(currShot, 0, i);
+                    }
                 } else {
-                    System.out.println("Value below lowerThreshold..."+ i);
+                    //    System.out.println("Value below lowerThreshold..." + i);
                     //add this frame to exisiting shot, neither a new key frame or not a new shot
-                    if(i>shotDuration){
+                    if (i > shotDuration) {
                         insertIntoShotHashMap(currShot, 1, -1);
                         shotDuration++;
                     }
@@ -112,7 +113,7 @@ public class videoToShots implements Runnable {
                 entropy_next = 0;
             }
             fis.close();
-            writeShotHashMapToFile();
+            printShotHashMap();
         } catch (IOException ex) {
             Logger.getLogger(videoToShots.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -203,6 +204,9 @@ public class videoToShots implements Runnable {
     }
 
     public double computeDifferenceInEntropy(double entropy_prev, double entropy_next) {
+        if (entropy_prev == 0) {
+            return 0;
+        }
         double diff;
         diff = 100 * Math.abs((entropy_next - entropy_prev) / entropy_prev);
         return diff;
@@ -243,46 +247,51 @@ public class videoToShots implements Runnable {
         shotInfo obj = shotHashMap.get(key);
         if (obj == null) {
             shotInfo objTemp = new shotInfo();
+            if ((count + key) > this.numFrames) {
+                count = (int) this.numFrames - key;
+            }
             objTemp.numFrames = count;
-            objTemp.keyFrames.add(keyFrameNum);
+            objTemp.keyFrames.put(keyFrameNum, 1);
             shotHashMap.put(key, objTemp);
         } else {
-            obj.numFrames+=count;
+            obj.numFrames += count;
+            if ((obj.numFrames + key) > this.numFrames) {
+                obj.numFrames = (int) this.numFrames - key;
+            }
             if (keyFrameNum != -1) {
-                obj.keyFrames.add(keyFrameNum);
+                obj.keyFrames.put(keyFrameNum, 1);
             }
             shotHashMap.put(key, obj);
         }
     }
 
-    public void writeShotHashMapToFile() throws IOException {
+    public void printShotHashMap() throws IOException {
+        //int count = 0;
+        for (Map.Entry<Integer, shotInfo> entry : shotHashMap.entrySet()) {
+            //System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue().numFrames);
+            entry.getValue().addKeyToKeyFramesHashMap(-1);
+            entry.getValue().addKeyToKeyFramesHashMap(-2);
+            entry.getValue().addKeyToKeyFramesHashMap(-3);
+            entry.getValue().addKeyToKeyFramesHashMap(-4);
+            entry.getValue().addKeyToKeyFramesHashMap(-5);
+        }
+        shotInfo.sortKeyFramesHashMapOnKey();
+        insertIntoShotHashMap(-1, 0, 0);
+        shotInfo.sortShotHashMapOnWeight();
+
         for (Map.Entry<Integer, shotInfo> entry : shotHashMap.entrySet()) {
             System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue().numFrames);
-            writeToFile(entry.getKey(), entry.getValue().numFrames);
-            break;
-        }
-    }
-
-    public void writeToFile(int start, int len) throws IOException {
-
-        try {
-            FileOutputStream fos = null;
-            FileInputStream fis = new FileInputStream(this.file);
-            //byte b[] = new byte[Height * Width * 3 * len];
-            fos = new FileOutputStream("videoOutput.rgb");
-            //fis.read(b, 0, Height * Width * 3 * len);
-            //fos.write(b, 0, Height * Width * 3 * len);
-            long counter = Height*Width*3*len;
-            int b;
-            while(counter!=0){
-                b = fis.read();
-                fos.write(b);
-                counter--;
+            System.out.print("Key Frames are: ");
+            for (Map.Entry<Integer, Integer> sub_entry : entry.getValue().keyFrames.entrySet()) {
+                System.out.print(sub_entry.getKey() + " ");
             }
-            fos.close();
-            fis.close();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(videoToShots.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println();
         }
+
+        //  count++;
+        //if(count == 3)
+        //if(entry.getKey() == 12485)
+        //  writeToFile(entry.getKey(), entry.getValue().numFrames);
+        //break;
     }
 }
