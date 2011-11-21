@@ -70,7 +70,7 @@ public class videoToShots implements Runnable {
             insertIntoShotHashMap(0, 20 * 24, 0);
             currShot = 0;
             long shotDuration = currShot + (20 * 24);
-            for (int i = 1; i < this.numFrames; i++) {
+            for (int i = 1; i < videoToShots.numFrames; i++) {
                 //System.out.println(i);
                 //printImage(yuvArray_1);
                 fis.read(frameArray_2, 0, Height * Width * 3);
@@ -249,16 +249,16 @@ public class videoToShots implements Runnable {
         shotInfo obj = shotHashMap.get(key);
         if (obj == null) {
             shotInfo objTemp = new shotInfo();
-            if ((count + key) > this.numFrames) {
-                count = (int) this.numFrames - key;
+            if ((count + key) > videoToShots.numFrames) {
+                count = (int) videoToShots.numFrames - key;
             }
             objTemp.numFrames = count;
             objTemp.keyFrames.put(keyFrameNum, 1);
             shotHashMap.put(key, objTemp);
         } else {
             obj.numFrames += count;
-            if ((obj.numFrames + key) > this.numFrames) {
-                obj.numFrames = (int) this.numFrames - key;
+            if ((obj.numFrames + key) > videoToShots.numFrames) {
+                obj.numFrames = (int) videoToShots.numFrames - key;
             }
             if (keyFrameNum != -1) {
                 int temp = 0;
