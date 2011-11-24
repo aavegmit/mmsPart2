@@ -92,7 +92,7 @@ class shotInfo {
             for (Map.Entry<Integer, Integer> sub_entry : entry.getValue().keyFrames.entrySet()) {
                 sum += sub_entry.getValue();
             }
-            entry.getValue().weight = (double) sum / (double) entry.getValue().numFrames;
+            entry.getValue().weight = (double) sum / (double) entry.getValue().keyFrames.size();
         }
     }
 
@@ -104,13 +104,10 @@ class shotInfo {
             RandomAccessFile fis = new RandomAccessFile(videoToShots.file, "r");
             //fos = new FileOutputStream("videoOutput.rgb");
             byte temp[] = new byte[videoToShots.Height * videoToShots.Width * 3];
-            /*while (start != 0) {
-                fis.read(temp);
-                start--;
-            }*/
             fis.seek(start*videoToShots.Height*videoToShots.Width*3);
             videoSummarize.fos.seek(videoSummarize.fos.length());
-//            System.out.println("Now writing...");
+            if((start+len) > videoToShots.numFrames)
+                len = (int)videoToShots.numFrames - start;
             while (len != 0) {
                 fis.read(temp);
                 videoSummarize.fos.write(temp);
