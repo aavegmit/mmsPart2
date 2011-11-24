@@ -105,7 +105,7 @@ class shotInfo {
             //fos = new FileOutputStream("videoOutput.rgb");
             byte temp[] = new byte[videoToShots.Height * videoToShots.Width * 3];
             fis.seek(start*videoToShots.Height*videoToShots.Width*3);
-            videoSummarize.fos.seek(videoSummarize.fos.length());
+            //videoSummarize.fos.seek(videoSummarize.fos.length());
             System.out.println("Now writing...");
             if((start+len) > videoToShots.numFrames)
                 len = (int)videoToShots.numFrames - start;

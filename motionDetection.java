@@ -19,7 +19,7 @@ public class motionDetection {
 
     static int blockSize = 16;
     static int K = 16;
-    static double thresholdDistance = 70;
+    static double thresholdDistance = 30;
 
     public static void motionDetetcionAlgo() {
         int index = 0;
@@ -38,13 +38,13 @@ public class motionDetection {
                 int length = startPoint + entry.getValue().numFrames;
                 System.out.println("KEY FRAME: "+startPoint+" Till What Frame: "+length);
                 //int length = startPoint + 2;
-                fis.seek(startPoint * videoToShots.Height * videoToShots.Width * 3);
+                fis.seek(((long)startPoint * (long)videoToShots.Height * (long)videoToShots.Width * 3));
                 fis.read(prevRGBFrame, 0, videoToShots.Height * videoToShots.Width * 3);
                 prevYUVFrame = videoToShots.convertToYUV(prevRGBFrame);
                 for (int i = startPoint + 1; i < length; i+=24) {
                     //prevYUVFrame = videoToShots.convertToYUV(prevRGBFrame);
                     index = i;
-                    fis.seek(i*videoToShots.Height*videoToShots.Width*3);
+                    fis.seek((long)i*(long)videoToShots.Height*(long)videoToShots.Width*3);
                     fis.read(currRGBFrame, 0, videoToShots.Height * videoToShots.Width * 3);
                     currYUVFrame = videoToShots.convertToYUV(currRGBFrame);
                     /*for(int m=0;m<blockSize;m++){
@@ -93,7 +93,7 @@ public class motionDetection {
         } catch (InterruptedException ex) {
             Logger.getLogger(motionDetection.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            System.out.println("THIS IS THE PROBLEM(index) : ("+index+") "+index*videoToShots.Height*videoToShots.Width*3);
+            System.out.println("THIS IS THE PROBLEM(index) : ("+index+") "+(long)(index*videoToShots.Height*videoToShots.Width*3));
             Logger.getLogger(motionDetection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
