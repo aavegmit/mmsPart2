@@ -35,8 +35,8 @@ public class videoToShots implements Runnable {
     long numShots;
     long shotLength = 20;
     int numBuckets = 10;
-    int lowerThreshold = 10;
-    int upperThreshold = 30;
+    int lowerThreshold = 5;
+    int upperThreshold = 10;
     //HashMap<Integer, > keyFrameHashMap = new HashMap<Integer, >();
     static LinkedHashMap<Integer, shotInfo> shotHashMap = new LinkedHashMap<Integer, shotInfo>();
     //byte frameArray[];
@@ -63,13 +63,14 @@ public class videoToShots implements Runnable {
 
             fis.read(frameArray_1, 0, Height * Width * 3);
             yuvArray_1 = convertToYUV(frameArray_1);
+            //printImage(yuvArray_1);
             entropy_prev = computeEntropy(yuvArray_1);
             //Insert the shot info into HASH MAP
-            insertIntoShotHashMap(0, 20 * 24, 0);
+            insertIntoShotHashMap(0, (int)this.shotLength * 24, 0);
             currShot = 0;
-            long shotDuration = currShot + (20 * 24);
-            for (int i = 1; i < videoToShots.numFrames; i++) {
-                //System.out.println(i);
+            long shotDuration = currShot + (this.shotLength * 24);
+            for (int i = 1; i < numFrames; i++) {
+                //System.out.println("\t................Next frame...................... "+i);
                 //printImage(yuvArray_1);
                 fis.read(frameArray_2, 0, Height * Width * 3);
                 //first get YUV for RGB
@@ -80,15 +81,14 @@ public class videoToShots implements Runnable {
                 entropyDiff = computeDifferenceInEntropy(entropy_prev, entropy_next);
                 //System.out.println("prev: "+ entropy_prev +" next: "+ entropy_next+" Diff in Entropy: "+entropyDiff);
                 if ((int) entropyDiff > upperThreshold) {
-                    //    System.out.println("Value above upperThreshold..." + i);
                     //create a new shot and put this frame as key frame
                     if (i > shotDuration) {
-                        insertIntoShotHashMap(i, 20 * 24, i);
+                        insertIntoShotHashMap(i, (int)this.shotLength * 24, i);
                         currShot = i;
-                        shotDuration = i + (20 * 24);
+                        shotDuration = i + (this.shotLength * 24);
                     } else {
-                        insertIntoShotHashMap(currShot, (int) ((i + (20 * 24) - shotDuration)), i);
-                        shotDuration = i + (20 * 24);
+                        insertIntoShotHashMap(currShot, (int) ((i + (this.shotLength * 24) - shotDuration)), i);
+                        shotDuration = i + (this.shotLength * 24);
                     }
                 } else if ((int) entropyDiff >= lowerThreshold && (int) entropyDiff <= upperThreshold) {
                     //create a new key frame but same shot
@@ -120,7 +120,7 @@ public class videoToShots implements Runnable {
     }
 
     //Convert RGB Frame to YUV
-    public double[] convertToYUV(byte frame[]) {
+    public static double[] convertToYUV(byte frame[]) {
         double[][] rgbMultiplier = new double[][]{{0.2990, 0.5870, 0.1140}, {-0.1470, -0.2890, 0.4360}, {0.6150, -0.5140, -0.1000}};
         double yuvArray[] = new double[Height * Width * 3];
 
@@ -195,10 +195,14 @@ public class videoToShots implements Runnable {
         }
         double prob[] = new double[numBuckets];
         for (int i = 0; i < numBuckets; i++) {
-            prob[i] = ((double) histogramBucket[i] / (Height * Width));
+            prob[i] = ((double) histogramBucket[i] / (double)(Height * Width));
+            //System.out.println("Prob is: "+prob[i]);
             if (prob[i] > 0) {
-                entropy += ((-1) * prob[i]) * Math.log(prob[i]);
+                double temp = (double)(Math.log(prob[i])/Math.log(2));
+                //System.out.println("Temp is : "+temp);
+                entropy += ((-1) * prob[i]) * temp;
             }
+            //System.out.println("entropy is: "+entropy);
         }
         return entropy;
     }
@@ -213,7 +217,7 @@ public class videoToShots implements Runnable {
     }
 
     //only prints YUV frame
-    public void printImage(double yuvArray[]) {
+    public static void printImage(double yuvArray[]) {
 
         BufferedImage img = new BufferedImage(Width, Height, BufferedImage.TYPE_BYTE_GRAY);
 
@@ -230,6 +234,7 @@ public class videoToShots implements Runnable {
                 int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
                 //int pix = ((a << 24) + (r << 16) + (g << 8) + b);
                 //this.pixels[y][x] = (double)pix;
+                //System.out.println("Value : "+r);
                 img.setRGB(x, y, pix);
                 ind++;
             }
@@ -272,23 +277,23 @@ public class videoToShots implements Runnable {
         }
     }
 
-    public void printShotHashMap() throws IOException {
+    public static void printShotHashMap() throws IOException {
         //int count = 0;
-        for (Map.Entry<Integer, shotInfo> entry : shotHashMap.entrySet()) {
+        //for (Map.Entry<Integer, shotInfo> entry : shotHashMap.entrySet()) {
             //System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue().numFrames);
-            entry.getValue().addKeyToKeyFramesHashMap(-1);
-            entry.getValue().addKeyToKeyFramesHashMap(-2);
-            entry.getValue().addKeyToKeyFramesHashMap(-3);
-            entry.getValue().addKeyToKeyFramesHashMap(-4);
-            entry.getValue().addKeyToKeyFramesHashMap(-5);
-        }
+            //entry.getValue().addKeyToKeyFramesHashMap(-1);
+            //entry.getValue().addKeyToKeyFramesHashMap(-2);
+            //entry.getValue().addKeyToKeyFramesHashMap(-3);
+            //entry.getValue().addKeyToKeyFramesHashMap(-4);
+            //entry.getValue().addKeyToKeyFramesHashMap(-5);
+        //}
         shotInfo.sortKeyFramesHashMapOnKey();
-        insertIntoShotHashMap(-1, 0, 0);
-        shotInfo.computeShotWeight();
-        shotInfo.sortShotHashMapOnWeight();
+        //insertIntoShotHashMap(-1, 0, 0);
+        //shotInfo.computeShotWeight();
+        //shotInfo.sortShotHashMapOnWeight();
 
         for (Map.Entry<Integer, shotInfo> entry : shotHashMap.entrySet()) {
-            System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue().numFrames + " Weight: "+entry.getValue().weight);
+            System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue().numFrames + " Weight: "+entry.getValue().weight+" Num of Keyframes: "+entry.getValue().keyFrames.size());
             System.out.print("Key Frames are: ");
             for (Map.Entry<Integer, Integer> sub_entry : entry.getValue().keyFrames.entrySet()) {
                 System.out.print(sub_entry.getKey() + " ");
