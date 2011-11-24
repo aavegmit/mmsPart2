@@ -78,7 +78,7 @@ public class AudioLevels {
 
 	// Obtain the information about the AudioInputStream
 	this.audioFormat = audioInputStream.getFormat();
-	System.out.println(audioFormat.getFrameSize() + " ,frame rate " + audioFormat.getFrameRate()) ;
+//	System.out.println(audioFormat.getFrameSize() + " ,frame rate " + audioFormat.getFrameRate()) ;
 	Info info = new Info(SourceDataLine.class, audioFormat);
     }
 
@@ -124,7 +124,7 @@ public class AudioLevels {
 		if (tempBytes > this.EXTERNAL_BUFFER_SIZE){
 		    readBytes = stream.read(audioBuffer, 0, audioBuffer.length);
 		    if (readBytes >= 0) {
-			System.out.println(readBytes) ;
+//			System.out.println(readBytes) ;
 			rawFile.write(audioBuffer, 0, this.EXTERNAL_BUFFER_SIZE) ;
 		    }
 		    tempBytes = tempBytes - this.EXTERNAL_BUFFER_SIZE ;
@@ -132,8 +132,8 @@ public class AudioLevels {
 		else{
 		    readBytes = stream.read(audioBuffer, 0, tempBytes);
 		    if (readBytes >= 0) {
-			System.out.println(readBytes) ;
-			System.out.println(audioBuffer[100]) ;
+//			System.out.println(readBytes) ;
+//			System.out.println(audioBuffer[100]) ;
 			rawFile.write(audioBuffer,0,tempBytes) ;
 		    }
 		    tempBytes = 0 ;
@@ -162,14 +162,18 @@ public class AudioLevels {
 	}
     }
 
-    public void addKeyInList(LinkedHashMap<Integer, Integer> lh, int key){
+    public int addKeyInList(LinkedHashMap<Integer, Integer> lh, int key){
 	boolean keyFound = false ;
 	for (Map.Entry<Integer, Integer> entry : lh.entrySet()) {
 	    if(entry.getKey() < key){
 		if(entry.getValue() + entry.getKey() > key){
 		    keyFound = true ;
 		    if(key + this.minFramesPerKeyFrame < entry.getKey() + entry.getValue()){
-			lh.put(entry.getKey(), this.minFramesPerKeyFrame - (entry.getKey()  - key) ) ;
+			int newVal = this.minFramesPerKeyFrame - (entry.getKey()  - key) ;
+			int oldVal = entry.getValue() ;
+			lh.put(entry.getKey(), newVal ) ;
+			// RETUN THE NUMBER OF FRAMES ADDED
+			return (newVal - oldVal) ;
 		    }
 		    break ;
 		} 
@@ -177,7 +181,9 @@ public class AudioLevels {
 	}
 	if(!keyFound){
 	    lh.put(key, this.minFramesPerKeyFrame) ;
+	    return this.minFramesPerKeyFrame;
 	}
+	return 0 ;
     }
 
     public void summarize(int percentage){
@@ -195,13 +201,13 @@ public class AudioLevels {
 	    LinkedHashMap<Integer, Integer> localKeyFrames = new LinkedHashMap<Integer, Integer>();
 	    if(totalFrames > 0){
 		localKeyFrames.put(entry.getKey(), this.minFramesPerKeyFrame) ;
-		--totalFrames ;
+		totalFrames-= this.minFramesPerKeyFrame ;
 	    }
 	    for (Map.Entry<Integer, Integer> keyEntry : entry.getValue().keyFrames.entrySet()) {
 		if(entry.getKey() != keyEntry.getKey() ){
 		    if(totalFrames > 0){
-			addKeyInList(localKeyFrames, keyEntry.getKey()) ;
-			--totalFrames ;
+			int addedFrames = addKeyInList(localKeyFrames, keyEntry.getKey()) ;
+			totalFrames-= addedFrames;
 		    }
 		    else
 			break ;
@@ -215,6 +221,9 @@ public class AudioLevels {
 	} // end of shots for loop
 
 	// Sort the final list on key indexes
+	Map<Integer, Integer> treeMap = new TreeMap<Integer, Integer>(finalKeyFrames);
+	finalKeyFrames.clear();
+	finalKeyFrames.putAll(treeMap);
 	for (Map.Entry<Integer, Integer> entry2 : finalKeyFrames.entrySet()) {
 	    System.out.println("Writing " + entry2.getKey() + " ,len " + entry2.getValue()) ;
 	    writeToRawFile(getAudioFrameNo(entry2.getKey()), entry2.getValue()/24 ) ;
