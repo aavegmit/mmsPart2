@@ -110,7 +110,7 @@ class shotInfo {
             }*/
             fis.seek(start*videoToShots.Height*videoToShots.Width*3);
             videoSummarize.fos.seek(videoSummarize.fos.length());
-            System.out.println("Now writing...");
+//            System.out.println("Now writing...");
             while (len != 0) {
                 fis.read(temp);
                 videoSummarize.fos.write(temp);
