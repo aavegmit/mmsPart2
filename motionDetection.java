@@ -19,13 +19,13 @@ public class motionDetection {
 
     static int blockSize = 16;
     static int K = 16;
-    static double thresholdDistance = 30;
+    static double thresholdDistance = 90;
 
     public static void motionDetetcionAlgo() {
         int index = 0;
         try {
             System.out.println("MOTION DETECTION ALGO STARTED...........................");
-            Thread.currentThread().sleep(2);
+            //Thread.currentThread().sleep(2);
             RandomAccessFile fis = new RandomAccessFile(videoToShots.file, "r");
             Random randomNum = new Random();
             byte prevRGBFrame[] = new byte[videoToShots.Height * videoToShots.Width * 3];
@@ -36,14 +36,14 @@ public class motionDetection {
             for (Map.Entry<Integer, shotInfo> entry : videoToShots.shotHashMap.entrySet()) {
                 int startPoint = entry.getKey();
                 int length = startPoint + entry.getValue().numFrames;
-                System.out.println("KEY FRAME: "+startPoint+" Till What Frame: "+length);
-                //int length = startPoint + 2;
+                //System.out.println("KEY FRAME: "+startPoint+" Till What Frame: "+length);
+                //int length = startPoint + 480;
                 fis.seek(((long)startPoint * (long)videoToShots.Height * (long)videoToShots.Width * 3));
                 fis.read(prevRGBFrame, 0, videoToShots.Height * videoToShots.Width * 3);
                 prevYUVFrame = videoToShots.convertToYUV(prevRGBFrame);
-                for (int i = startPoint + 1; i < length; i+=24) {
+                for (int i = startPoint + 1; i < 2; i++) {
                     //prevYUVFrame = videoToShots.convertToYUV(prevRGBFrame);
-                    index = i;
+                    //index = i;
                     fis.seek((long)i*(long)videoToShots.Height*(long)videoToShots.Width*3);
                     fis.read(currRGBFrame, 0, videoToShots.Height * videoToShots.Width * 3);
                     currYUVFrame = videoToShots.convertToYUV(currRGBFrame);
@@ -69,31 +69,33 @@ public class motionDetection {
                     }*/
 
                     double distance = 0, temp = 0, counter=0;
-                    for (int j = 0; j < 16; j++) {
+                    for (int j = 0; j < 1; j++) {
                         int startHeight = randomNum.nextInt(videoToShots.Height - blockSize);
                         int startWidth = randomNum.nextInt(videoToShots.Width - blockSize);
                         temp = findMacroBlockAndComputeDistance(startHeight, startWidth, prevYUVFrame, currYUVFrame);
-                        if(temp < 0)
+                        /*if(temp < 0)
                             counter++;
-                        else
+                        else{*/
                             distance+=temp;
+                        //}
                     }
-                    //System.out.println("now the return value is: "+temp);
+                    System.out.println("Distance: "+distance);
                     //setting as key frame as distance is above threshold
                     if(distance > thresholdDistance ){//|| counter > 10){
                         //make curr frame a key frame
+                        //System.out.println("Distance: "+distance);
                         entry.getValue().addKeyToKeyFramesHashMap(i);
-                        //System.out.println("Threshold crossed...Distance is "+distance);
+                        System.out.println("Threshold crossed...Distance is "+distance);
                     }
                     System.arraycopy(currYUVFrame, 0, prevYUVFrame, 0, currYUVFrame.length);
                 }
-                //break;
+                break;
             }
             fis.close();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(motionDetection.class.getName()).log(Level.SEVERE, null, ex);
+        //} catch (InterruptedException ex) {
+          //  Logger.getLogger(motionDetection.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            System.out.println("THIS IS THE PROBLEM(index) : ("+index+") "+(long)(index*videoToShots.Height*videoToShots.Width*3));
+            //System.out.println("THIS IS THE PROBLEM(index) : ("+index+") "+(long)(index*videoToShots.Height*videoToShots.Width*3));
             Logger.getLogger(motionDetection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -150,9 +152,11 @@ public class motionDetection {
                         sum+=Math.abs((macroBlock[m][n]-currYUVFrame[((i+m)*videoToShots.Width)+j+n]));
                     }
                 }
-                if(sum == 0){
-                    //System.out.println("MATCH FOUND!!!!!");
-                    //System.out.println("Pos : ("+i+","+j);
+                if(i==startHeight && j==startWidth)
+                    System.out.println("Sum for macroBlock is: "+sum);
+                if(sum < 20){
+                    System.out.println("MATCH FOUND!!!!!");
+                    System.out.println("Pos : ("+i+","+j);
                     double x1, x2, y1, y2;
                     x2 = i+blockSize/2.0;
                     y2 = j+blockSize/2.0;
@@ -161,6 +165,7 @@ public class motionDetection {
                     
                     return Math.sqrt(Math.pow(y2-y1, 2) + Math.pow(x2-x1, 2));
                 }
+                System.out.println("Next Iterartion.....................................");
             }
         }
         return -1;

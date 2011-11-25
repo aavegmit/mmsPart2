@@ -92,7 +92,8 @@ class shotInfo {
             for (Map.Entry<Integer, Integer> sub_entry : entry.getValue().keyFrames.entrySet()) {
                 sum += sub_entry.getValue();
             }
-            entry.getValue().weight = (double) sum / (double) entry.getValue().keyFrames.size();
+            if((double) entry.getValue().keyFrames.size() > 0)
+                entry.getValue().weight = (double) sum / (double) entry.getValue().keyFrames.size();
         }
     }
 
