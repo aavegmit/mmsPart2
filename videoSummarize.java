@@ -37,12 +37,14 @@ public class videoSummarize {
             }
             String videoFileName = args[0];
             String audioFileName = args[1];
-            int percentage = Integer.parseInt(args[2]);
+            double percentage = Double.parseDouble(args[2]);
 
             fos = new RandomAccessFile("videoOutput.rgb", "rw");
             fos.setLength(0);
             
-            Thread videoShotThread = new Thread(new videoToShots(videoFileName));
+            //Thread videoShotThread = new Thread(new videoToShots(videoFileName));
+            videoToShots vidShot = new videoToShots(videoFileName);
+            vidShot.colorHistogram();
 
             AudioLevels al = new AudioLevels(audioFileName) ;
     //	al.writeToRawFile(31150, 1) ;
@@ -56,25 +58,25 @@ public class videoSummarize {
             
     //        
     //        //soundShotThread.start();
-            videoShotThread.start();
+            //videoShotThread.start();
 
 
-            try {
+            //try {
                 //delay for one second
                 //Thread.sleep(500000);
                 //soundShotThread.join();
-                videoShotThread.join();
-                videoToShots.printShotHashMap();
+                //videoShotThread.join();
+                //videoToShots.printShotHashMap();
                 motionDetection.motionDetetcionAlgo();
-                videoToShots.printShotHashMap();
                 System.out.println("Main exiting..");
-            } catch (IOException ex) {
-                Logger.getLogger(videoSummarize.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (InterruptedException e) {
-            }
+            //} catch (IOException ex) {
+              //  Logger.getLogger(videoSummarize.class.getName()).log(Level.SEVERE, null, ex);
+            //} catch (InterruptedException e) {
+            //}
 
-    //	al.shorten() ;
-            al.summarize(percentage) ;
+            //al.shorten() ;
+            al.summarize((int)percentage) ;
+            videoToShots.printShotHashMap();
             try {
                 fos.close();
             } catch (Exception ex) {

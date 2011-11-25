@@ -33,26 +33,24 @@ public class videoToShots implements Runnable {
     static int Width = 320;
     static long numFrames;
     long numShots;
-    long shotLength = 20;
+    int shotLength = 15;
     int numBuckets = 10;
-    int lowerThreshold = 5;
-    int upperThreshold = 10;
+    int lowerThreshold = 2;
+    int upperThreshold = 7;
     //HashMap<Integer, > keyFrameHashMap = new HashMap<Integer, >();
     static LinkedHashMap<Integer, shotInfo> shotHashMap = new LinkedHashMap<Integer, shotInfo>();
-    //byte frameArray[];
 
     public videoToShots(String fileName) throws FileNotFoundException {
         file = new File(fileName);
         this.fis = new FileInputStream(file);
         numFrames = file.length() / (Height * Width * 3);
-        //this.numFrames = 1000;
         this.numShots = numFrames / 120;
-        //this.shotLength = 120 * (this.Height * this.Width * 3);
-        //frameArray = new byte[this.Height * this.Width * 3];
     }
 
     @Override
     public void run() {
+        }
+    public void colorHistogram() {
         try {
             double yuvArray_1[] = new double[Height * Width * 3];
             double yuvArray_2[] = new double[Height * Width * 3];
@@ -63,12 +61,15 @@ public class videoToShots implements Runnable {
 
             fis.read(frameArray_1, 0, Height * Width * 3);
             yuvArray_1 = convertToYUV(frameArray_1);
+            //fis.read(frameArray_2, 0, Height * Width * 3);
+            //yuvArray_2 = convertToYUV(frameArray_2);
             //printImage(yuvArray_1);
             entropy_prev = computeEntropy(yuvArray_1);
             //Insert the shot info into HASH MAP
             insertIntoShotHashMap(0, (int)this.shotLength * 24, 0);
             currShot = 0;
             long shotDuration = currShot + (this.shotLength * 24);
+            //fis.read(frameArray_2, 0, Height * Width * 3);
             for (int i = 1; i < numFrames; i++) {
                 //System.out.println("\t................Next frame...................... "+i);
                 //printImage(yuvArray_1);
@@ -80,17 +81,17 @@ public class videoToShots implements Runnable {
                 //compute diff of entropy with prev so as to determine new shot, key frame or continuos frame
                 entropyDiff = computeDifferenceInEntropy(entropy_prev, entropy_next);
                 //System.out.println("prev: "+ entropy_prev +" next: "+ entropy_next+" Diff in Entropy: "+entropyDiff);
-                if ((int) entropyDiff > upperThreshold) {
+                if ( entropyDiff > upperThreshold) {
                     //create a new shot and put this frame as key frame
                     if (i > shotDuration) {
                         insertIntoShotHashMap(i, (int)this.shotLength * 24, i);
                         currShot = i;
                         shotDuration = i + (this.shotLength * 24);
                     } else {
-                        insertIntoShotHashMap(currShot, (int) ((i + (this.shotLength * 24) - shotDuration)), i);
+                        insertIntoShotHashMap(currShot,  (int)((i + (this.shotLength * 24) - shotDuration)), i);
                         shotDuration = i + (this.shotLength * 24);
                     }
-                } else if ((int) entropyDiff >= lowerThreshold && (int) entropyDiff <= upperThreshold) {
+                } else if (entropyDiff >= lowerThreshold && entropyDiff <= upperThreshold) {
                     //create a new key frame but same shot
                     //     System.out.println("Value between Thresholds..." + i);
                     if (i > shotDuration) {
@@ -125,9 +126,9 @@ public class videoToShots implements Runnable {
         double yuvArray[] = new double[Height * Width * 3];
 
         int ind = 0;
-        double Y_array[][] = new double[Height][Width];
-        double U_array[][] = new double[Height][Width];
-        double V_array[][] = new double[Height][Width];
+        //double Y_array[][] = new double[Height][Width];
+        //double U_array[][] = new double[Height][Width];
+        //double V_array[][] = new double[Height][Width];
 
         for (int y = 0; y < Height; y++) {
 
@@ -138,7 +139,7 @@ public class videoToShots implements Runnable {
                 int b = frame[ind + Height * Width * 2] & 0xff;
 
 
-                for (int i = 0; i < 3; i++) {
+                /*for (int i = 0; i < 1; i++) {
                     double temp = 0;
                     for (int j = 0; j < 3; j++) {
                         if (j == 0) {
@@ -160,15 +161,18 @@ public class videoToShots implements Runnable {
                             V_array[y][x] = temp;
                         }
                     }
-                }
+                }*/
+                double temp = rgbMultiplier[0][0]*r+rgbMultiplier[0][1]*g+rgbMultiplier[0][2]*b;
                 //int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
                 //int pix = ((a << 24) + (r << 16) + (g << 8) + b);
                 //img.setRGB(x,y,pix);
+                //Y_array[y][x] = temp;
+                yuvArray[ind] = temp;
                 ind++;
             }
         }
 
-        int k = 0;
+        /*int k = 0;
         for (int i = 0; i < Height; i++) {
             for (int j = 0; j < Width; j++) {
                 yuvArray[k] = Y_array[i][j];
@@ -176,7 +180,7 @@ public class videoToShots implements Runnable {
                 yuvArray[k + Height * Width * 2] = V_array[i][j];
                 k++;
             }
-        }
+        }*/
 
         return yuvArray;
     }
@@ -253,7 +257,7 @@ public class videoToShots implements Runnable {
         if (obj == null) {
             shotInfo objTemp = new shotInfo();
             if ((count + key) > videoToShots.numFrames) {
-                count = (int) videoToShots.numFrames - key;
+                count =  (int)(videoToShots.numFrames - key);
             }
             objTemp.numFrames = count;
             //objTemp.keyFrames.put(keyFrameNum, 1);
@@ -261,7 +265,7 @@ public class videoToShots implements Runnable {
         } else {
             obj.numFrames += count;
             if ((obj.numFrames + key) > videoToShots.numFrames) {
-                obj.numFrames = (int) videoToShots.numFrames - key;
+                obj.numFrames = (int) (videoToShots.numFrames - key);
             }
             if (keyFrameNum != -1) {
                 int temp = 0;

@@ -199,10 +199,10 @@ public class AudioLevels {
 	
 	for (Map.Entry<Integer, shotInfo> entry : videoToShots.shotHashMap.entrySet()) {
 	    LinkedHashMap<Integer, Integer> localKeyFrames = new LinkedHashMap<Integer, Integer>();
-	    if(totalFrames > 0){
-		localKeyFrames.put(entry.getKey(), this.minFramesPerKeyFrame) ;
-		totalFrames-= this.minFramesPerKeyFrame ;
-	    }
+//	    if(totalFrames > 0){
+//		localKeyFrames.put(entry.getKey(), this.minFramesPerKeyFrame) ;
+//		totalFrames-= this.minFramesPerKeyFrame ;
+//	    }
 	    for (Map.Entry<Integer, Integer> keyEntry : entry.getValue().keyFrames.entrySet()) {
 		if(entry.getKey() != keyEntry.getKey() ){
 		    if(totalFrames > 0){
