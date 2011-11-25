@@ -39,7 +39,7 @@ public class videoSummarize {
             String audioFileName = args[1];
             double percentage = Double.parseDouble(args[2]);
 
-            fos = new RandomAccessFile("/media/New Volume/576_sample/videoOutput.rgb", "rw");
+            fos = new RandomAccessFile("videoOutput.rgb", "rw");
             fos.setLength(0);
             
             //Thread videoShotThread = new Thread(new videoToShots(videoFileName));
@@ -47,12 +47,12 @@ public class videoSummarize {
             vidShot.colorHistogram();
 
             AudioLevels al = new AudioLevels(audioFileName) ;
-//                motionDetection.motionDetetcionAlgo();
+                motionDetection.motionDetetcionAlgo();
 //                System.out.println("Main exiting..");
 
-            al.shorten() ;
+            //al.shorten() ;
             al.summarize((int)percentage) ;
-//            videoToShots.printShotHashMap();
+            videoToShots.printShotHashMap();
             try {
                 fos.close();
             } catch (Exception ex) {
