@@ -39,7 +39,7 @@ public class videoSummarize {
             String audioFileName = args[1];
             int percentage = Integer.parseInt(args[2]);
 
-            fos = new RandomAccessFile("videoOutput.rgb", "rw");
+            fos = new RandomAccessFile("/media/New Volume/576_sample/videoOutput.rgb", "rw");
             fos.setLength(0);
             
             Thread videoShotThread = new Thread(new videoToShots(videoFileName));
@@ -64,25 +64,26 @@ public class videoSummarize {
                 //Thread.sleep(500000);
                 //soundShotThread.join();
                 videoShotThread.join();
-                videoToShots.printShotHashMap();
-                motionDetection.motionDetetcionAlgo();
-                videoToShots.printShotHashMap();
-                System.out.println("Main exiting..");
-            } catch (IOException ex) {
-                Logger.getLogger(videoSummarize.class.getName()).log(Level.SEVERE, null, ex);
+//                videoToShots.printShotHashMap();
+//                motionDetection.motionDetetcionAlgo();
+//                videoToShots.printShotHashMap();
+//                System.out.println("Main exiting..");
+//            } catch (IOException ex) {
+//                Logger.getLogger(videoSummarize.class.getName()).log(Level.SEVERE, null, ex);
             } catch (InterruptedException e) {
             }
 
-    //	al.shorten() ;
-            al.summarize(percentage) ;
-            try {
-                fos.close();
-            } catch (Exception ex) {
-            } 
+	System.out.println("Audio algo starting") ;
+	al.shorten() ;
+	al.summarize(percentage) ;
+//	videoToShots.printShotHashMap() ;
+	try {
+	    fos.close();
+	} catch (Exception ex) {
+	} 
 
         } catch (IOException ex) {
             Logger.getLogger(videoSummarize.class.getName()).log(Level.SEVERE, null, ex);
 	} 
-
     }
 }

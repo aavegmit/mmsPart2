@@ -104,7 +104,7 @@ class shotInfo {
             RandomAccessFile fis = new RandomAccessFile(videoToShots.file, "r");
             //fos = new FileOutputStream("videoOutput.rgb");
             byte temp[] = new byte[videoToShots.Height * videoToShots.Width * 3];
-            fis.seek(start*videoToShots.Height*videoToShots.Width*3);
+            fis.seek((long)start*(long)videoToShots.Height*(long)videoToShots.Width*3);
             //videoSummarize.fos.seek(videoSummarize.fos.length());
             System.out.println("Now writing...");
             if((start+len) > videoToShots.numFrames)
@@ -116,8 +116,10 @@ class shotInfo {
             }
             fis.close();
         } catch (FileNotFoundException ex) {
+	    System.out.println("exception 1") ;
             Logger.getLogger(videoToShots.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException e){
+	    System.out.println("exception 2") ;
 	}
     }
 }
