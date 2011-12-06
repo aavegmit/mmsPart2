@@ -88,12 +88,12 @@ public class AudioLevels {
     }
 
     public int getAudioFrameNo(int videoFrameNo){
-	float timeSeek = (float)(videoFrameNo / 24 ) ;
+	float timeSeek = (float)(videoFrameNo / 24 )  ;
 	return (int)(timeSeek*audioFormat.getFrameRate()) ;
     }
 
     public void writeToRawFile(int audioFrameNo, float time){
-	int noOfFrame = (int)(time * audioFormat.getFrameRate()) ;
+	int noOfFrame = (int)(time * audioFormat.getFrameRate() ) ;
 	int initialByte = audioFrameNo*audioFormat.getFrameSize() ;
 	int finalByte = initialByte + noOfFrame*audioFormat.getFrameSize() ;
 	rawBytesCount += finalByte - initialByte ;
@@ -205,18 +205,18 @@ public class AudioLevels {
 //		totalFrames-= this.minFramesPerKeyFrame ;
 //	    }
 	    for (Map.Entry<Integer, Integer> keyEntry : entry.getValue().keyFrames.entrySet()) {
-		if(entry.getKey() != keyEntry.getKey() ){
+//		if(entry.getKey() != keyEntry.getKey() ){
 		    if(totalFrames > 0){
-			int addedFrames = addKeyInList(localKeyFrames, keyEntry.getKey()) ;
+			int addedFrames = addKeyInList(finalKeyFrames, keyEntry.getKey()) ;
 			totalFrames-= addedFrames;
 		    }
 		    else
 			break ;
-		}
+//		}
 	    } // end of keys for loop
-	    for (Map.Entry<Integer, Integer> entry1 : localKeyFrames.entrySet()) {
-		finalKeyFrames.put(entry1.getKey(), entry1.getValue()) ;
-	    }
+//	    for (Map.Entry<Integer, Integer> entry1 : localKeyFrames.entrySet()) {
+//		finalKeyFrames.put(entry1.getKey(), entry1.getValue()) ;
+//	    }
 	    if (totalFrames == 0)
 		break ;
 	} // end of shots for loop
