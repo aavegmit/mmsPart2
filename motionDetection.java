@@ -19,7 +19,7 @@ public class motionDetection {
 
     static int blockSize = 16;
     static int K = 16;
-    static double thresholdDistance = 90;
+    static double thresholdDistance = 70;
 
     public static void motionDetetcionAlgo() {
         int index = 0;
@@ -133,7 +133,7 @@ public class motionDetection {
                 }
                 //if(i==startHeight && j==startWidth)
                     //System.out.println("Sum for macroBlock is: "+sum);
-                if(sum < 100){
+                if(sum < 25){
 //                    System.out.println("MATCH FOUND!!!!!");
 //                    System.out.println("Pos : ("+i+","+j+")");
                     double x1, x2, y1, y2;
