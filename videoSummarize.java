@@ -54,7 +54,7 @@ public class videoSummarize {
             motionDetection.motionDetetcionAlgo();
             al.shorten() ;
             al.summarize((int)(percentage*100)) ;
-            videoToShots.printShotHashMap();
+            //videoToShots.printShotHashMap();
             try {
                 fos.close();
             } catch (Exception ex) {
