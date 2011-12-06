@@ -47,10 +47,10 @@ public class videoSummarize {
             vidShot.colorHistogram();
 
             AudioLevels al = new AudioLevels(audioFileName) ;
-//            motionDetection.motionDetetcionAlgo();
+            motionDetection.motionDetetcionAlgo();
 //                System.out.println("Main exiting..");
 
-            //al.shorten() ;
+            al.shorten() ;
             al.summarize((int)percentage) ;
 //            videoToShots.printShotHashMap();
             try {

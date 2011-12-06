@@ -48,7 +48,7 @@ public class AudioLevels {
     public AudioLevels(String audioFileName) {
 	this.audioFile = new File(audioFileName);
 	this.rawBytesCount = 0 ;
-	this.keyFrameThreshold = (float)0.08 ;
+	this.keyFrameThreshold = (float)0.8 ;
 	this.minFramesPerKeyFrame = 24*5 ;  // 5 sec of video
 	curPosition = Position.NORMAL;
 
@@ -278,20 +278,20 @@ public class AudioLevels {
 		    for(int cn = 0 ; cn < readBytes - 1 ; cn+=2) {
 			float audioVal = (float)( ( ( audioBuffer[cn+1] << 8 ) | ( audioBuffer[cn] & 0xff ) ) / 32768.0 ); 
 			meanAudioVal += Math.abs(audioVal) ;
-//			    if( Math.abs(audioVal) > this.keyFrameThreshold){
-//				// Add tempFrameNo as key
-//				videoToShots.shotHashMap.get(videoFN).addKeyToKeyFramesHashMap(getVideoFrameNo(tempFrameNo) ) ;
-//			    }
-			++tempFrameNo;
-			if(tempFrameNo%(audioFormat.getFrameRate()) == 0){
-			    meanAudioVal = (float)meanAudioVal / audioFormat.getFrameRate() ;
-//			    System.out.println(meanAudioVal) ;
-			    if( meanAudioVal > this.keyFrameThreshold){
+			    if( Math.abs(audioVal) > this.keyFrameThreshold){
 				// Add tempFrameNo as key
-				videoToShots.shotHashMap.get(videoFN).addKeyToKeyFramesHashMap(getVideoFrameNo(tempFrameNo)-1 ) ;
+				videoToShots.shotHashMap.get(videoFN).addKeyToKeyFramesHashMap(getVideoFrameNo(tempFrameNo) ) ;
 			    }
-			    meanAudioVal = (float)0.0 ;
-			}
+//			++tempFrameNo;
+//			if(tempFrameNo%(audioFormat.getFrameRate()) == 0){
+//			    meanAudioVal = (float)meanAudioVal / audioFormat.getFrameRate() ;
+////			    System.out.println(meanAudioVal) ;
+//			    if( meanAudioVal > this.keyFrameThreshold){
+//				// Add tempFrameNo as key
+//				videoToShots.shotHashMap.get(videoFN).addKeyToKeyFramesHashMap(getVideoFrameNo(tempFrameNo)-1 ) ;
+//			    }
+//			    meanAudioVal = (float)0.0 ;
+//			}
 		    }
 		}
 	    } catch (IOException e1) {
