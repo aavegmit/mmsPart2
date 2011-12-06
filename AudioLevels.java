@@ -48,7 +48,7 @@ public class AudioLevels {
     public AudioLevels(String audioFileName) {
 	this.audioFile = new File(audioFileName);
 	this.rawBytesCount = 0 ;
-	this.keyFrameThreshold = (float)0.1 ;
+	this.keyFrameThreshold = (float)0.08 ;
 	this.minFramesPerKeyFrame = 24*5 ;  // 5 sec of video
 	curPosition = Position.NORMAL;
 
