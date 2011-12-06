@@ -19,7 +19,7 @@ public class motionDetection {
 
     static int blockSize = 16;
     static int K = 16;
-    static double thresholdDistance = 15; //90 for dynamic
+    static double thresholdDistance = 80;//static 10; //90 for dynamic
     static int counter = 0;
     static int counterD = 0;
 
@@ -45,7 +45,7 @@ public class motionDetection {
                 fis.seek(((long) startPoint * (long) videoToShots.Height * (long) videoToShots.Width * 3));
                 fis.read(prevRGBFrame, 0, videoToShots.Height * videoToShots.Width * 3);
                 prevYUVFrame = videoToShots.convertToYUV(prevRGBFrame);
-                for (int i = startPoint + 1; i < length; i += 6) {
+                for (int i = startPoint + 1; i < length; i+=3) {
                     //prevYUVFrame = videoToShots.convertToYUV(prevRGBFrame);
                     //index = i;
                     fis.seek((long) i * (long) videoToShots.Height * (long) videoToShots.Width * 3);
@@ -54,8 +54,8 @@ public class motionDetection {
 
                     double distance = 0, temp = 0, counter = 0;
                     for (int j = 0; j < 16; j++) {
-                        int startHeight = startHeightArray[j];//randomNum.nextInt(videoToShots.Height - blockSize);
-                        int startWidth = startWidthArray[j];//randomNum.nextInt(videoToShots.Width - blockSize);
+                        int startHeight = randomNum.nextInt(videoToShots.Height - blockSize);//startHeightArray[j];//
+                        int startWidth = randomNum.nextInt(videoToShots.Width - blockSize);//startWidthArray[j];//
                                 temp = findMacroBlockAndComputeDistance(startHeight, startWidth, prevYUVFrame, currYUVFrame);
                         if (temp < 0) {
                             counter++;
