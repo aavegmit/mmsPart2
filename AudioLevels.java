@@ -188,6 +188,18 @@ public class AudioLevels {
     }
 
     public void summarize(int percentage){
+	LinkedHashMap<Integer, Integer> finalKeyFrames = new LinkedHashMap<Integer, Integer>();
+	// Adjust minFramesPerKeyFrame according to percentage
+	if(percentage <= 20)
+	    this.minFramesPerKeyFrame = 24*3 ;
+	if(percentage >= 70)
+	    this.minFramesPerKeyFrame = 24*6 ;
+	if(percentage >= 90)
+	    this.minFramesPerKeyFrame = 24*7 ;
+	if(percentage >= 99){
+	    this.minFramesPerKeyFrame = (int)videoToShots.numFrames ;
+	    finalKeyFrames.put(0, (int)videoToShots.numFrames) ;
+	}
 	// Find the frames(based on percentage) needed in the summary
 	long totalFrames = videoToShots.numFrames * percentage / 100 ;
 	// Sort the shots based on weight
@@ -195,7 +207,6 @@ public class AudioLevels {
 	shotInfo.sortShotHashMapOnWeight() ;
 	// Sort the key frames based on its weight
 	shotInfo.sortKeyFramesHashMapOnKey() ;
-	LinkedHashMap<Integer, Integer> finalKeyFrames = new LinkedHashMap<Integer, Integer>();
 	System.out.println("total Frames " + totalFrames) ;
 	
 	for (Map.Entry<Integer, shotInfo> entry : videoToShots.shotHashMap.entrySet()) {

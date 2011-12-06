@@ -43,7 +43,7 @@ public class videoSummarize {
                 System.exit(1);
             }
 
-            fos = new RandomAccessFile("videoOutput.rgb", "rw");
+            fos = new RandomAccessFile("/media/New Volume/videoOutput.rgb", "rw");
             fos.setLength(0);
             
             //Thread videoShotThread = new Thread(new videoToShots(videoFileName));
