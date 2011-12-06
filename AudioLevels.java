@@ -157,7 +157,7 @@ public class AudioLevels {
 	}
 	AudioInputStream stream = new AudioInputStream(rawFileInput, audioFormat, rawBytesCount/audioFormat.getFrameSize()) ;
 	try{
-	    AudioSystem.write(stream, AudioFileFormat.Type.WAVE, new File("out.wav"));
+	    AudioSystem.write(stream, AudioFileFormat.Type.WAVE, new File("audioOutput.wav"));
 	} catch(Exception e){
 	}
     }
