@@ -19,7 +19,7 @@ public class motionDetection {
 
     static int blockSize = 16;
     static int K = 16;
-    static double thresholdDistance = 15;
+    static double thresholdDistance = 15; //90 for dynamic
     static int counter = 0;
     static int counterD = 0;
 
@@ -66,8 +66,8 @@ public class motionDetection {
                     //setting as key frame as distance is above threshold
                     if (distance > thresholdDistance) {//|| counter >= 15){
                         //System.out.println("Distance: "+distance);
-                        counterD++;
-                        System.out.println("Distance waali values: "+counterD);
+                        //counterD++;
+                        //System.out.println("Distance waali values: "+counterD);
                         //make curr frame a key frame
                         entry.getValue().addKeyToKeyFramesHashMap(i);
 //                        System.out.println("Threshold crossed...Distance is "+distance);
@@ -140,8 +140,8 @@ public class motionDetection {
                 //if(i==startHeight && j==startWidth)
                 //System.out.println("Sum for macroBlock is: "+sum);
                 if (sum < 20) {
-                    counter++;
-                    System.out.println("Found matches: "+counter);
+                    //counter++;
+                    //System.out.println("Found matches: "+counter);
                     //System.out.println("MATCH FOUND!!!!!");
 //                    System.out.println("Pos : ("+i+","+j+")");
                     double x1, x2, y1, y2;
