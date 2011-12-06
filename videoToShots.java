@@ -260,7 +260,7 @@ public class videoToShots implements Runnable {
                 count =  (int)(videoToShots.numFrames - key);
             }
             objTemp.numFrames = count;
-            objTemp.keyFrames.put(keyFrameNum, 1);
+            //objTemp.keyFrames.put(keyFrameNum, 1);
             shotHashMap.put(key, objTemp);
         } else {
             obj.numFrames += count;
@@ -271,10 +271,10 @@ public class videoToShots implements Runnable {
                 int temp = 0;
                 if(obj.keyFrames.containsKey(keyFrameNum)){
                     temp = obj.keyFrames.get(keyFrameNum);
-                  obj.keyFrames.put(keyFrameNum, temp+1);
+                  //obj.keyFrames.put(keyFrameNum, temp+1);
                 }
                 else {
-                    obj.keyFrames.put(keyFrameNum, 1);
+                    //obj.keyFrames.put(keyFrameNum, 1);
                 }
             }
             shotHashMap.put(key, obj);
